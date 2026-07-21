@@ -27,13 +27,59 @@ document.querySelectorAll(".card-expand").forEach((button) => {
   });
 });
 
+const modalOverlay = document.querySelector("#modal-overlay");
+const modalSymbol = document.querySelector("#modal-symbol");
+const modalTitle = document.querySelector("#modal-title");
+const modalPrice = document.querySelector("#modal-price");
+const modalContent = document.querySelector("#modal-content");
+const modalWhatsapp = document.querySelector("#modal-whatsapp");
+const modalClose = document.querySelector(".modal-close");
+let lastFocusedElement = null;
+
+function openModal(card) {
+  const title = card.querySelector("h3").textContent;
+  const template = card.querySelector("template.modal-body");
+
+  modalSymbol.textContent = card.dataset.modalSymbol || "";
+  modalTitle.textContent = title;
+  modalPrice.textContent = card.dataset.modalPrice || card.dataset.price || "";
+  modalContent.innerHTML = "";
+  if (template) {
+    modalContent.appendChild(template.content.cloneNode(true));
+  }
+  modalWhatsapp.onclick = () => {
+    openWhatsApp(card.dataset.whatsappMessage || `Olá, Yohan! Quero solicitar um orçamento para ${card.dataset.service} (${card.dataset.price}).`);
+    closeModal();
+  };
+
+  lastFocusedElement = document.activeElement;
+  modalOverlay.hidden = false;
+  requestAnimationFrame(() => modalOverlay.classList.add("open"));
+  document.body.classList.add("modal-open");
+  modalClose.focus();
+}
+
+function closeModal() {
+  modalOverlay.classList.remove("open");
+  document.body.classList.remove("modal-open");
+  window.setTimeout(() => {
+    modalOverlay.hidden = true;
+  }, 250);
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+
 document.querySelectorAll(".quote-btn").forEach((button) => {
   button.addEventListener("click", () => {
-    const card = button.closest(".reading-card");
-    const service = card.dataset.service;
-    const price = card.dataset.price;
-    openWhatsApp(`Olá, Yohan! Quero solicitar um orçamento para o serviço ${service} (${price}).`);
+    openModal(button.closest(".reading-card"));
   });
+});
+
+modalClose.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", (event) => {
+  if (event.target === modalOverlay) closeModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
 });
 
 const toggle = document.querySelector(".menu-toggle");
